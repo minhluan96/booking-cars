@@ -1,31 +1,52 @@
 <template>
-  <gmap-map
-    id="map"
-    :center="center"
-    :zoom="16"
-    :options="options"
-    map-type-id="terrain"
-  >
-    <gmap-marker :position="center">
-    </gmap-marker>
-  </gmap-map>
+  <div style="position: relative">
+    <gmap-map
+      id="map"
+      :center="center"
+      :zoom="16"
+      :options="options"
+      map-type-id="terrain">
+      <gmap-marker :position="center">
+      </gmap-marker>
+    </gmap-map>
+    <div class="container">
+      <div class="row">
+        <div class="col-md-8">
+          <el-autocomplete style="width: 100%"
+            v-model="state4"
+            :fetch-suggestions="querySearchAsync"
+            placeholder="Tìm kiếm địa chỉ"
+            @select="handleSelect">
+            <i class="el-icon-search el-input__icon"
+              slot="suffix">
+            </i>
+          </el-autocomplete>
+        </div>
+      </div>
+    </div>
+  </div>
+
 </template>
 <script>
   import Vue from 'vue'
   import * as VueGoogleMaps from 'vue2-google-maps'
   Vue.use(VueGoogleMaps, {
     load: {
-      key: "AIzaSyBkwRNAhT2ic6ZMR3i10ms51YhUJGHTXaQ"
+      key: "AIzaSyBkwRNAhT2ic6ZMR3i10ms51YhUJGHTXaQ",
+      libraries: 'places'
     }
   })
   export default {
     data () {
       return {
+        state4: '',
+        timeout: null,
         center: {
           lat: 10.762558,
           lng: 106.681426
         },
         options: {
+          disableDefaultUI : true,
           styles: [{
             'featureType': 'water',
             'stylers': [{'saturation': 43}, {'lightness': -11}, {'hue': '#0088ff'}]
@@ -66,11 +87,29 @@
           }]
         }
       }
+    },
+    methods: {
+      querySearchAsync(queryString, cb) {
+        clearTimeout(this.timeout);
+        this.timeout = setTimeout(() => {
+          //cb(results);
+        }, 3000 * Math.random());
+      },
+      handleSelect(item) {
+        console.log(item);
+      }
     }
   }
 </script>
 <style>
   #map {
     min-height: calc(100vh - 90px);
+  }
+
+  .container {
+    position: absolute;
+    top: 10px;
+    left: 0px;
+    z-index: 99;
   }
 </style>

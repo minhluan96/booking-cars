@@ -1,8 +1,8 @@
 var db = require('../repositories/mysql-provider');
 
 exports.createRequest = function (requestEntity) {
-  var sql = `insert into REQUESTS(NameLocation, Latitude, Longtitude, Note, Status)
-            values (N'${requestEntity.NameLocation}', '${requestEntity.Latitude}', '${requestEntity.Longtitude}',
+  var sql = `insert into REQUESTS(GuestName, GuestTelephone, NameLocation, Note, Status)
+            values (N'${requestEntity.GuestName}', '${requestEntity.GuestTelephone}', N'${requestEntity.NameLocation}',
             N'${requestEntity.Note}', ${requestEntity.Status})`
   console.log(sql)
   return db.write(sql)

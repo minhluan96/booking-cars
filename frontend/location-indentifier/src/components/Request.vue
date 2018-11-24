@@ -4,8 +4,8 @@
       <span><strong>DANH SÁCH CÁC REQUEST</strong></span>
       <el-button style="float: right; padding: 3px 0" type="text" icon="el-icon-refresh">Làm mới danh sách</el-button>
     </div>
-    <div v-for="o in 12" :key="o">
-      <RequestItem />
+    <div v-for="r in listRequest" :key="r.ID">
+      <RequestItem :item="r" />
     </div>
   </el-card>
 </template>
@@ -16,6 +16,20 @@ import RequestItem from '@/components/RequestItem.vue'
 export default {
   components: {
     RequestItem
+  },
+  props: ['requests'],
+  data () {
+    return {
+      requestsModel: {},
+      listRequest: []
+    }
+  },
+  watch: {
+    requests (newValue, oldValue) {
+      this.requestsModel = Object.assign({}, newValue)
+      console.log(`updated`, this.requestsModel)
+      this.listRequest = this.requestsModel.results
+    }
   }
 }
 </script>

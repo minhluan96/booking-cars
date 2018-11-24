@@ -3,7 +3,7 @@
     <NavBar />
     <div class="row">
       <div class="col-md-3">
-        <Request />
+        <Request :requests="requests"/>
       </div>
       <div class="col-md-9">
         <Maps />
@@ -24,6 +24,23 @@ export default {
     NavBar,
     Request,
     Maps
+  },
+  data () {
+    return {
+      requests: []
+    }
+  },
+  mounted() {
+    var requestPayload = { 'return_ts': 0, 'page': 1, 'per_page': 10 }
+    this.$store.dispatch('setupWS').then(value => {
+      console.log(value)
+      this.requests.results.push(value)
+      console.log('after', this.requests)
+    })
+    this.$store.dispatch('getRequests', requestPayload)
+      .then(value => {
+        this.requests = value
+      })
   }
 }
 </script>

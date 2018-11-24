@@ -2,7 +2,7 @@ var eventEmitter = require('eventemitter3');
 
 var emitter = new eventEmitter();
 
-var subscribEvent = (req, res, event) => {
+var subscribeEvent = (req, res, event) => {
   res.writeHead(200, {
     'ContentType': 'text/event-stream',
     'Connection': 'keep-alive',
@@ -27,4 +27,17 @@ var subscribEvent = (req, res, event) => {
     clearInterval(heartBeat)
     emitter.removeListener(event, handler);
   })
+}
+
+var subcribeRequestChange = (req, res) => {
+  subscribeEvent(req, res, 'REQUEST_CHANGE')
+}
+
+var publishRequestChange = requestObj => {
+  emitter.emit('REQUEST_CHANGE', requestObj)
+}
+
+module.exports = {
+  subcribeRequestChange,
+  publishRequestChange
 }
