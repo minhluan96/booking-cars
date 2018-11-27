@@ -8,9 +8,14 @@
     "lint": "vue-cli-service lint"
   },
   "dependencies": {
+    "@fortawesome/fontawesome-svg-core": "^1.2.8",
+    "@fortawesome/free-solid-svg-icons": "^5.5.0",
+    "@fortawesome/vue-fontawesome": "^0.1.2",
     "bootstrap337": "^3.3.7",
     "element-ui": "^2.4.11",
     "google-maps": "^3.3.0",
+    "i": "^0.3.6",
+    "npm": "^6.4.1",
     "vue": "^2.5.17",
     "vue-router": "^3.0.1",
     "vue2-google-maps": "^0.10.3",

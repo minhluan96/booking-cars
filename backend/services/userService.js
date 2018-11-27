@@ -13,3 +13,8 @@ exports.login = function (userEntity) {
   var sql = `select * from USERS where Username = '${userEntity.Username}' and Password = '${md5_pw}'`;
   return db.load(sql);
 }
+
+exports.getUserInfo = function (id) {
+  var sql = `select u.ID, u.Username, u.ID_Roles, r.Name from USERS u join ROLES r on u.ID_Roles = r.ID where u.id = ${id}`
+  return db.load(sql)
+}

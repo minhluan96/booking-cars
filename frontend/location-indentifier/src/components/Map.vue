@@ -4,24 +4,37 @@
       id="map"
       :center="center"
       :zoom="16"
+      ref="gmap"
       :options="options"
       map-type-id="terrain">
-      <gmap-marker :position="center">
+      <gmap-marker ref="markers" :position="center" :draggable="true" @drag="updateCoordinates">
       </gmap-marker>
     </gmap-map>
     <div class="container">
       <div class="row">
         <div class="col-md-8">
-          <el-autocomplete style="width: 100%"
-            v-model="state4"
-            :fetch-suggestions="querySearchAsync"
-            placeholder="Tìm kiếm địa chỉ"
-            @select="handleSelect">
-            <i class="el-icon-search el-input__icon"
-              slot="suffix">
-            </i>
-          </el-autocomplete>
+          <el-input placeholder="Tìm kiếm địa chỉ" v-model="inputData" class="input-with-select">
+           <el-button slot="append" icon="el-icon-search" @click="geocodeAddress(geocoder, mapModel)"></el-button>
+         </el-input>
         </div>
+      </div>
+      <div class="row">
+        <div class="col-md-8">
+          <el-card style="margin-top: 10px">
+            <div class="clearfix">
+              <span style="float: left"><strong>Thông tin tiếp nhận</strong></span>
+              <span style="float: right; color: red">{{selectedRequest.StatusName}}</span>
+              <br/>
+              <br/>
+              <span style="float: left">{{requestInfo()}}</span>
+              <el-button style="float: right; padding: 3px 0" icon="el-icon-edit" type="text"
+                @click="emitRequestGeocode">Ghi nhận yêu cầu</el-button>
+            </div>
+          </el-card>
+        </div>
+      </div>
+      <div class="row">
+
       </div>
     </div>
   </div>
@@ -37,10 +50,20 @@
     }
   })
   export default {
+    props: ['request'],
     data () {
       return {
         state4: '',
         timeout: null,
+        marker: null,
+        inputData: '',
+        mapModel: null,
+        selectedRequest: {},
+        geocoder: null,
+        position: {
+          lat: 0,
+          lng: 0
+        },
         center: {
           lat: 10.762558,
           lng: 106.681426
@@ -89,14 +112,53 @@
       }
     },
     methods: {
-      querySearchAsync(queryString, cb) {
-        clearTimeout(this.timeout);
-        this.timeout = setTimeout(() => {
-          //cb(results);
-        }, 3000 * Math.random());
+      geocodeAddress(geocoder, resultsMap) {
+        var self = this
+        geocoder.geocode({ 'address': this.inputData }, function(results, status) {
+          if (status === 'OK') {
+            var location = { lat: results[0].geometry.location.lat(), lng: results[0].geometry.location.lng() }
+            resultsMap.$mapObject.panTo(location)
+            self.marker.$markerObject.setPosition(location)
+            self.position.lat = location.lat
+            self.position.lng = location.lng
+          } else {
+            self.$message({
+              type: 'error',
+              message: 'Không tìm được địa điểm'
+            });
+          }
+        })
       },
-      handleSelect(item) {
-        console.log(item);
+      updateCoordinates(marker) {
+        this.position.lat = marker.latLng.lat()
+        this.position.lng = marker.latLng.lng()
+      },
+      emitRequestGeocode() {
+        if ((this.position.lat == 0 && this.position.lng == 0) || this.request.ID == null) {
+          this.$message({ type: 'error', message: 'Không đủ thông tin để ghi nhận' });
+          return
+        }
+        var geocode = {
+          ID: this.request.ID,
+          Lat: this.position.lat,
+          Lng: this.position.lng
+        }
+        this.$emit('locationUpdated', geocode)
+      },
+      requestInfo() {
+        return `Tên khách hàng: ${this.selectedRequest.GuestName} - Địa chỉ đón: ${this.selectedRequest.NameLocation}`
+      }
+    },
+    mounted() {
+      this.$gmapApiPromiseLazy().then(() => {
+        this.geocoder = new google.maps.Geocoder();
+      })
+      this.marker = this.$refs.markers
+      this.mapModel = this.$refs.gmap
+    },
+    watch: {
+      request (newValue, oldValue) {
+        this.selectedRequest = newValue
       }
     }
   }

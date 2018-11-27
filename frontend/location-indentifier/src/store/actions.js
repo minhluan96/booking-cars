@@ -1,14 +1,27 @@
 import * as types from './mutation-types'
 import axios from 'axios'
+import utils from './utils'
+
 
 var headers = {
     'Content-Type': 'application/json',
-    'x-access-token': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyIjp7IklEIjoxLCJVc2VybmFtZSI6Im1pbmhsdWFuIiwiUGFzc3dvcmQiOiI2MDQwMjQ3ZjMwMmU0ZWI0OTRiZGZiYmNjZDg4NWE3ZiIsIlJlZnJlc2hUb2tlbiI6IjQ4N2Y3YjIyZjY4MzEyZDJjMWJiYzkzYjFhZWE0NDViIiwiSURfUm9sZXMiOjJ9LCJpYXQiOjE1NDMwNzM3MzIsImV4cCI6MTU0MzE2MDEzMn0.41VU-6wXfriYATxkchzsa-poraCrikKDVCukWQNrqUE'
+    'x-access-token': ''
+}
+
+var configureHeader = function (accessToken) {
+  var headers = {
+      'Content-Type': 'application/json',
+      'x-access-token': accessToken
+  }
+  return headers
 }
 
 export const getRequests = ({ commit }, requestPayload) => {
+  headers = configureHeader(utils.getAccessToken())
+  var user_id = utils.getUserID()
   return new Promise((resolve, reject) => {
-    axios.get(`http://127.0.0.1:3000/requests?ts=${requestPayload.return_ts}&page=${requestPayload.page}&per_page=${requestPayload.per_page}`, { headers })
+    axios.get(`http://127.0.0.1:3000/requests?ts=${requestPayload.return_ts}&page=${requestPayload.page}&per_page=${requestPayload.per_page}&staffID=${user_id}`,
+       { headers })
       .then(result => {
         commit(types.GET_REQUEST, result.data)
         resolve(result.data)
@@ -16,7 +29,6 @@ export const getRequests = ({ commit }, requestPayload) => {
         reject(err)
       })
   })
-
 }
 
 export const setupWS = ({ commit }, requestPayload) => {
@@ -25,15 +37,91 @@ export const setupWS = ({ commit }, requestPayload) => {
     var clientSocket = new WebSocket('ws://localhost:40510');
 
     clientSocket.onopen = function () {
-        console.log('connected');
         clientSocket.send('hello server');
     }
 
     clientSocket.onmessage = function (e) {
-      console.log(e.data);
       // var data = JSON.parse(e.data);
       resolve(JSON.parse(e.data))
     }
   })
+}
 
+export const updateRequestGeocode = ({commit}, requestPayload) => {
+  headers = configureHeader(utils.getAccessToken())
+  return new Promise((resolve, reject) => {
+    axios.put(`http://127.0.0.1:3000/requests/${requestPayload.ID}/geocode`, requestPayload, { headers })
+      .then(result => {
+        commit(types.UPDATE_REQUEST, result.data)
+        resolve(result.data)
+      }).catch(err => {
+        reject(err)
+      })
+  })
+}
+
+export const updateRequestStatus = ({commit}, requestPayload) => {
+  headers = configureHeader(utils.getAccessToken())
+  return new Promise((resolve, reject) => {
+    axios.put(`http://127.0.0.1:3000/requests/${requestPayload.ID}/status`, requestPayload, { headers })
+      .then(result => {
+        commit(types.UPDATE_REQUEST, result.data)
+        resolve(result.data)
+      }).catch(err => {
+        reject(err)
+      })
+  })
+}
+
+export const getRequestDetail = ({ commit }, requestPayload) => {
+  headers = configureHeader(utils.getAccessToken())
+  return new Promise((resolve, reject) => {
+    axios.get(`http://127.0.0.1:3000/requests/${requestPayload.ID}`, { headers })
+      .then(result => {
+        commit(types.REQUEST_DETAIL, result.data)
+        resolve(result.data)
+      }).catch(err => {
+        reject(err)
+      })
+  })
+}
+
+export const loginRequest = ({commit}, userPayload) => {
+  headers = configureHeader(utils.getAccessToken())
+  return new Promise((resolve, reject) => {
+    axios.post(`http://127.0.0.1:3000/login`, userPayload)
+      .then(result => {
+        commit(types.USER, result.data)
+        resolve(result.data)
+      }).catch(err => {
+        reject(err)
+      })
+  })
+}
+
+export const getUserInfo = ({commit}, userPayload) => {
+  headers = configureHeader(utils.getAccessToken())
+  return new Promise((resolve, reject) => {
+    axios.get(`http://127.0.0.1:3000/users/${userPayload.ID}`, { headers })
+      .then(result => {
+        commit(types.USER, result.data)
+        resolve(result.data)
+      }).catch(err => {
+        reject(err)
+      })
+  })
+}
+
+
+export const signupRequest = ({commit}, userPayload) => {
+  headers = configureHeader(utils.getAccessToken())
+  return new Promise((resolve, reject) => {
+    axios.post(`http://127.0.0.1:3000/signup`, userPayload)
+      .then(result => {
+        commit(types.USER, result.data)
+        resolve(result.data)
+      }).catch(err => {
+        reject(err)
+      })
+  })
 }

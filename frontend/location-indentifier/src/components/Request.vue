@@ -5,7 +5,7 @@
       <el-button style="float: right; padding: 3px 0" type="text" icon="el-icon-refresh">Làm mới danh sách</el-button>
     </div>
     <div v-for="r in listRequest" :key="r.ID">
-      <RequestItem :item="r" />
+      <RequestItem :item="r" @acceptedRequest="itemClickHandler" />
     </div>
   </el-card>
 </template>
@@ -21,14 +21,20 @@ export default {
   data () {
     return {
       requestsModel: {},
-      listRequest: []
+      listRequest: [],
+      selectedId: -1
+    }
+  },
+  methods: {
+    itemClickHandler(args) {
+      this.$emit('requestItemSelected', args);
     }
   },
   watch: {
     requests (newValue, oldValue) {
       this.requestsModel = Object.assign({}, newValue)
-      console.log(`updated`, this.requestsModel)
       this.listRequest = this.requestsModel.results
+      console.log('list request', this.listRequest)
     }
   }
 }

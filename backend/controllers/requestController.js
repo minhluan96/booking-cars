@@ -9,7 +9,40 @@ var router = express.Router();
 router.post('/', (req, res, next) => {
   requestService.createRequest(req.body).then(value => {
     res.statusCode = 201
+    var id = value.insertId
+    req.body.ID = id
     var result = req.body
+    res.json(result)
+
+    console.log('sent')
+    events.publishRequestChange(result)
+    broadcastAll(result)
+  }).catch(err => {
+    res.statusCode = 500;
+    next(err);
+  })
+})
+
+router.put('/:id/geocode', (req, res, next) => {
+  requestService.updateGeocodeLocation(req.body).then(value => {
+    res.statusCode = 201
+    var result = req.body
+    res.json(result)
+    events.publishRequestChange(result)
+    broadcastAll(result)
+  }).catch(err => {
+    res.statusCode = 500;
+    next(err);
+  })
+})
+
+router.put('/:id/status', (req, res, next) => {
+  requestService.updateStatus(req.body).then(value => {
+    var id = req.params.id
+    return requestService.getRequestByID(id)
+  }).then(rows => {
+    res.statusCode = 201
+    var result = rows[0]
     res.json(result)
 
     events.publishRequestChange(result)
@@ -24,6 +57,7 @@ router.get('/', (req, res, next) => {
   var page = req.query.page || 1;
   var perPage = req.query.per_page || 10;
   var offset = (page - 1) * perPage;
+  var staffID = req.query.staffID
 
   var totalItems = 0
   var totalPages = 0
@@ -35,10 +69,10 @@ router.get('/', (req, res, next) => {
 
   var loop = 0
   var execute = () => {
-    requestService.getTotalRequest().then(rows => {
+    requestService.getTotalRequest(staffID).then(rows => {
       totalItems = rows[0].total
       totalPages = Math.ceil(totalItems / perPage)
-      return requestService.getRequestsPerPage(perPage, offset)
+      return requestService.getRequestsPerPage(staffID, perPage, offset)
     }).then(rows => {
       if (rows.length > 0) {
         res.json({
@@ -62,7 +96,20 @@ router.get('/', (req, res, next) => {
     })
   }
   execute()
+})
 
+router.get('/:id', (req, res, next) => {
+  var id = req.params.id
+  requestService.getRequestByID(id).then(value => {
+    res.statusCode = 200
+    if (value.length > 0) {
+      res.json(value[0])
+    } else {
+      res.json({})
+    }
+  }).catch(err => {
+    next(err)
+  })
 })
 
 module.exports = router;

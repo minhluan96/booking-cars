@@ -6,7 +6,9 @@ import * as actions from './actions'
 Vue.use(Vuex)
 
 const state = {
-  requests: {}
+  requests: {},
+  requestItem: {},
+  user: {}
 }
 
 export default new Vuex.Store({

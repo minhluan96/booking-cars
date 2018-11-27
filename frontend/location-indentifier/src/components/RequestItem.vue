@@ -3,14 +3,14 @@
     <el-collapse-item :title="item.GuestName" name="1">
       <div>
         <div class="row">
-          <div class="col-sm-9" style="text-align: left">
+          <div class="col-md-7" style="text-align: left">
             <span>Địa chỉ: {{ item.NameLocation }}</span><br/>
             <span>Số điện thoại: {{ item.GuestTelephone }}</span>
           </div>
-          <div class="col-sm-3">
+          <div class="col-md-5">
             <el-button
               size="mini"
-              type="success">Nhận</el-button>
+              :type="typeButton()" @click="onButtonClicked">{{titleButton()}}</el-button>
           </div>
         </div>
         <div class="row" style="text-align: left">
@@ -29,10 +29,35 @@
 export default {
   props: ['item'],
   data() {
-      return {
-        activeNames: ['1']
-      };
+    return {
+      activeNames: ['1'],
+      itemModel: {}
+    };
+  },
+  methods: {
+    onButtonClicked() {
+      this.$emit('acceptedRequest', this.item);
+    },
+    titleButton() {
+      if (this.item.Status != 3) {
+        return 'Tiếp tục xử lý'
+      } else {
+        return 'Nhận yêu cầu'
+      }
+    },
+    typeButton() {
+      if (this.item.Status != 3) {
+        return 'warning'
+      } else {
+        return 'success'
+      }
     }
+  },
+  watch: {
+    item (newValue, oldValue) {
+      this.itemModel = newValue
+    }
+  }
 }
 </script>
 
