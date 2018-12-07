@@ -90,7 +90,7 @@ CREATE TABLE `STATUS` (
 
 LOCK TABLES `STATUS` WRITE;
 /*!40000 ALTER TABLE `STATUS` DISABLE KEYS */;
-INSERT INTO `STATUS` VALUES (1,'Đang hoạt động'),(2,'Ngừng hoạt động'),(3,'Đang chờ'),(4,'Đã nhận');
+INSERT INTO `STATUS` VALUES (1,'Đang hoạt động'),(2,'Ngừng hoạt động'),(3,'Đang chờ'),(4,'Đã nhận'),(5, 'Đang bận');
 /*!40000 ALTER TABLE `STATUS` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -105,10 +105,13 @@ CREATE TABLE `USERS` (
   `ID` int(11) NOT NULL AUTO_INCREMENT,
   `Username` varchar(200) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
   `Password` varchar(200) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-  `RefreshToken` varchar(200) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `RefreshToken` varchar(2000) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `Status` int(11) NOT NULL DEFAULT '2',
   `ID_Roles` int(11) NOT NULL,
   PRIMARY KEY (`ID`),
+  KEY `FK_USR_STS_idx` (`Status`),
   KEY `FK_USR_RLS_idx` (`ID_Roles`),
+  CONSTRAINT `FK_USR_STS` FOREIGN KEY (`Status`) REFERENCES `STATUS` (`ID`) ON DELETE NO ACTION ON UPDATE NO ACTION,
   CONSTRAINT `FK_USR_RLS` FOREIGN KEY (`ID_Roles`) REFERENCES `ROLES` (`ID`) ON DELETE NO ACTION ON UPDATE NO ACTION
 ) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
@@ -119,7 +122,8 @@ CREATE TABLE `USERS` (
 
 LOCK TABLES `USERS` WRITE;
 /*!40000 ALTER TABLE `USERS` DISABLE KEYS */;
-INSERT INTO `USERS` VALUES (1,'minhluan','6040247f302e4eb494bdfbbccd885a7f','487f7b22f68312d2c1bbc93b1aea445b',2);
+INSERT INTO `USERS` VALUES (1,'minhluan','6040247f302e4eb494bdfbbccd885a7f','487f7b22f68312d2c1bbc93b1aea445b',2,2);
+INSERT INTO `USERS` VALUES (2,'chhung','e10adc3949ba59abbe56e057f20f883e','',2,4);
 /*!40000 ALTER TABLE `USERS` ENABLE KEYS */;
 UNLOCK TABLES;
 /*!40103 SET TIME_ZONE=@OLD_TIME_ZONE */;
