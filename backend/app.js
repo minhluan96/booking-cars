@@ -24,7 +24,7 @@ app.get ('/', (req, res) => {
 var verifyAccessToken = (req, res, next) => {
   var token = req.headers['x-access-token'];
   if (token) {
-    jwt.verify(token, 'SECRET-LIBRARY', (err, payload) => {
+    jwt.verify(token, 'SECRET-BOOKING-CARS-TOKEN', (err, payload) => {
       if (err) {
         res.statusCode = 403;
         res.json({

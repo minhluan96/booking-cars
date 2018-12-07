@@ -2,33 +2,47 @@
   <div style="position: relative">
     <gmap-map
       id="map"
-      :center="center"
+      :center="start.center"
       :zoom="16"
       ref="gmap"
       :options="options"
       map-type-id="terrain">
-      <gmap-marker ref="markers" :position="center" :draggable="true" @drag="updateCoordinates">
+      <gmap-marker ref="markers" :position="start.center" :title="start.title" :icon="start.startIcon"  :draggable="true" @drag="updateCoordinates">
+      </gmap-marker>
+
+      <gmap-marker ref="finishMarkers" :position="finish.finishCenter" :title="finish.title" :icon="finish.finishIcon" :draggable="true" @drag="updateFinishPositionCoordinates">
       </gmap-marker>
     </gmap-map>
     <div class="container">
       <div class="row">
-        <div class="col-md-8">
-          <el-input placeholder="Tìm kiếm địa chỉ" v-model="inputData" class="input-with-select">
-           <el-button slot="append" icon="el-icon-search" @click="geocodeAddress(geocoder, mapModel)"></el-button>
-         </el-input>
+        <div class="col-md-10" style="text-align: left">
+
+          <GmapAutocomplete class="autocomplete-input" @place_changed="setPlace">
+          </GmapAutocomplete>
+
+          <el-select v-model="selectedOption" filterable placeholder="Select">
+            <el-option
+              v-for="item in optionSelects"
+              :key="item.value"
+              :label="item.label"
+              :value="item.value">
+            </el-option>
+          </el-select>
+
+          <el-button slot="append" icon="el-icon-search" @click="usePlace()"></el-button>
         </div>
       </div>
       <div class="row">
-        <div class="col-md-8">
+        <div class="col-md-10">
           <el-card style="margin-top: 10px">
             <div class="clearfix">
               <span style="float: left"><strong>Thông tin tiếp nhận</strong></span>
               <span style="float: right; color: red">{{selectedRequest.StatusName}}</span>
               <br/>
               <br/>
-              <span style="float: left">{{requestInfo()}}</span>
+              <span style="float: left; text-align: left; white-space: pre-line;">{{requestInfo()}}</span>
               <el-button style="float: right; padding: 3px 0" icon="el-icon-edit" type="text"
-                @click="emitRequestGeocode">Ghi nhận yêu cầu</el-button>
+                @click="emitRequestGeocode" :disabled="disableButton()">Ghi nhận yêu cầu</el-button>
             </div>
           </el-card>
         </div>
@@ -56,18 +70,49 @@
         state4: '',
         timeout: null,
         marker: null,
+        finishedMarker: null,
         inputData: '',
+        map: null,
         mapModel: null,
         selectedRequest: {},
+        directionsService: null,
+        directionsDisplay: null,
         geocoder: null,
-        position: {
-          lat: 0,
-          lng: 0
+        place: null,
+        start: {
+          position: {
+            lat: 0,
+            lng: 0
+          },
+          center: {
+            lat: 10.762558,
+            lng: 106.681426
+          },
+          startIcon: "http://maps.google.com/mapfiles/ms/icons/red-dot.png",
+          title: "Nơi đón"
         },
-        center: {
-          lat: 10.762558,
-          lng: 106.681426
+        finish: {
+          finishPosition: {
+            lat: 0,
+            lng: 0
+          },
+          finishCenter: {
+            lat: 10.762977,
+            lng: 106.686948
+          },
+          finishIcon: "http://maps.google.com/mapfiles/ms/icons/blue-dot.png",
+          title: "Điểm dừng"
         },
+        optionSelects: [
+          {
+            value: 1,
+            label: 'Điểm đón'
+          }, {
+            value: 2,
+            label: 'Điểm dừng'
+          }
+        ],
+        selectedOption: 1,
         options: {
           disableDefaultUI : true,
           styles: [{
@@ -112,6 +157,25 @@
       }
     },
     methods: {
+      usePlace() {
+        if (this.place) {
+          var location = { lat: this.place.geometry.location.lat(), lng: this.place.geometry.location.lng() }
+          this.place = null;
+          if (this.selectedOption == 1) {
+            this.marker.$markerObject.setPosition(location)
+            this.start.position.lat = location.lat
+            this.start.position.lng = location.lng
+            this.selectedOption = 2
+          } else {
+            this.finishedMarker.$markerObject.setPosition(location)
+            this.finish.finishPosition.lat = location.lat
+            this.finish.finishPosition.lng = location.lng
+            this.selectedOption = 1
+          }
+          this.mapModel.panTo(location)
+          this.calculateRoutes()
+        }
+      },
       geocodeAddress(geocoder, resultsMap) {
         var self = this
         geocoder.geocode({ 'address': this.inputData }, function(results, status) {
@@ -119,8 +183,8 @@
             var location = { lat: results[0].geometry.location.lat(), lng: results[0].geometry.location.lng() }
             resultsMap.$mapObject.panTo(location)
             self.marker.$markerObject.setPosition(location)
-            self.position.lat = location.lat
-            self.position.lng = location.lng
+            self.start.position.lat = location.lat
+            self.start.position.lng = location.lng
           } else {
             self.$message({
               type: 'error',
@@ -130,35 +194,105 @@
         })
       },
       updateCoordinates(marker) {
-        this.position.lat = marker.latLng.lat()
-        this.position.lng = marker.latLng.lng()
+        this.start.position.lat = marker.latLng.lat()
+        this.start.position.lng = marker.latLng.lng()
+        this.calculateRoutes()
+      },
+      updateFinishPositionCoordinates(marker) {
+        this.finish.finishPosition.lat = marker.latLng.lat()
+        this.finish.finishPosition.lng = marker.latLng.lng()
+        this.calculateRoutes()
       },
       emitRequestGeocode() {
-        if ((this.position.lat == 0 && this.position.lng == 0) || this.request.ID == null) {
+        if ((this.start.position.lat == 0 && this.start.position.lng == 0) ||
+            (this.finish.finishPosition.lat == 0 && this.finish.finishPosition.lng == 0)  || this.request.ID == null) {
           this.$message({ type: 'error', message: 'Không đủ thông tin để ghi nhận' });
           return
         }
+
         var geocode = {
           ID: this.request.ID,
-          Lat: this.position.lat,
-          Lng: this.position.lng
+          start: {
+            Lat: this.start.position.lat,
+            Lng: this.start.position.lng
+          },
+          end: {
+            Lat: this.finish.finishPosition.lat,
+            Lng: this.finish.finishPosition.lng
+          }
         }
-        this.$emit('locationUpdated', geocode)
+        this.$confirm(`Bạn có chắc chắn với các thông tin đã nhập?`, 'Lưu ý kiểm tra lại thông tin', {
+          confirmButtonText: 'Đồng ý',
+          cancelButtonText: 'Hủy bỏ',
+          type: 'warning'
+        }).then(() => {
+          this.resetAllValues()
+          this.$emit('locationUpdated', geocode)
+        }).catch(() => {
+          this.$message({
+            type: 'info',
+            message: 'Hủy ghi nhận'
+          });
+        });
       },
       requestInfo() {
-        return `Tên khách hàng: ${this.selectedRequest.GuestName} - Địa chỉ đón: ${this.selectedRequest.NameLocation}`
+        if (this.selectedRequest.GuestName == null && this.selectedRequest.NameLocation == null) {
+          return 'Không có thông tin để hiển thị'
+        }
+        return `Tên khách hàng: ${this.selectedRequest.GuestName}
+                Địa chỉ đón: ${this.selectedRequest.NameLocation}
+                Địa chỉ dừng: ${this.selectedRequest.FinishLocationName}`
+      },
+      disableButton() {
+        return this.selectedRequest.ID == null
+      },
+      setPlace(place) {
+        this.place = place
+      },
+      calculateRoutes() {
+        var self = this
+        var start = new google.maps.LatLng(self.start.position.lat, self.start.position.lng)
+        var end = new google.maps.LatLng(self.finish.finishPosition.lat, self.finish.finishPosition.lng);
+        var request = {
+          origin: start,
+          destination: end,
+          travelMode: google.maps.TravelMode.DRIVING
+        }
+        self.directionsService.route(request, function(response, status) {
+          if (status == google.maps.DirectionsStatus.OK) {
+            self.directionsDisplay.setDirections(response);
+            self.directionsDisplay.setMap(self.map)
+          } else {
+            console.log("Directions Request from " + start.toUrlValue(6) + " to " + end.toUrlValue(6) + " failed: " + status)
+          }
+        });
+      },
+      resetAllValues() {
+        this.directionsDisplay.setMap(null);
+        this.start.position.lat = 0
+        this.start.position.lng = 0
+        this.finish.finishPosition.lat = 0
+        this.finish.finishPosition.lng = 0
       }
     },
     mounted() {
       this.$gmapApiPromiseLazy().then(() => {
         this.geocoder = new google.maps.Geocoder();
+        this.directionsService = new google.maps.DirectionsService();
+        this.directionsDisplay = new google.maps.DirectionsRenderer();
       })
+      var self = this
+      this.$refs.gmap.$mapPromise.then(map => {
+        self.map = map
+      });
       this.marker = this.$refs.markers
+      this.finishedMarker = this.$refs.finishMarkers
       this.mapModel = this.$refs.gmap
     },
     watch: {
       request (newValue, oldValue) {
         this.selectedRequest = newValue
+        this.resetAllValues()
       }
     }
   }
@@ -166,6 +300,23 @@
 <style>
   #map {
     min-height: calc(100vh - 90px);
+  }
+
+  .autocomplete-input {
+    -webkit-appearance: none;
+    background-color: #fff;
+    background-image: none;
+    border-radius: 4px;
+    border: 1px solid #dcdfe6;
+    box-sizing: border-box;
+    color: #606266;
+    display: inline-block;
+    font-size: inherit;
+    height: 40px;
+    outline: 0;
+    padding: 0 15px;
+    transition: border-color .2s cubic-bezier(.645,.045,.355,1);
+    width: 65%;
   }
 
   .container {

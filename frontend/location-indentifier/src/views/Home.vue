@@ -3,7 +3,7 @@
     <NavBar />
     <div class="row">
       <div class="col-md-3">
-        <Request :requests="requests" @requestItemSelected="requestItemHandler"/>
+        <Request :requests="requests" @requestItemSelected="requestItemHandler" @requestNextPage="fetchNewData"/>
       </div>
       <div class="col-md-9">
         <Maps :request="request" @locationUpdated="locationUpdatedHandler" />
@@ -18,6 +18,7 @@ import NavBar from '@/components/NavBar.vue'
 import Request from '@/components/Request.vue'
 import Maps from '@/components/Map.vue'
 import utils from '@/store/utils'
+import axios from 'axios'
 
 export default {
   name: 'home',
@@ -53,48 +54,46 @@ export default {
     },
     locationUpdatedHandler(args) {
       var self = this
-      var lat = args.Lat
-      var lng = args.Lng
       var requestID = args.ID
       if (requestID == -1 || this.request == null) {
         this.$message({ type: 'error', message: 'Vui lòng chọn request tương ứng' });
         return
       }
-      var requestPayload = {
-        ID: requestID,
-        Latitude: lat,
-        Longtitude: lng
-      }
 
-      this.$store.dispatch('updateRequestGeocode', requestPayload)
+      this.$store.dispatch('updateRequestGeocode', args)
         .then(value => {
+          self.request = {}
+          return this.$store.dispatch('sendRequestForDrivers', value)
+        }).then(value => {
           self.$message({
             type: 'success',
             message: `Xử lý thành công`
           });
-          self.request = {}
         }).catch(err => {
           self.$message({
             type: 'error',
             message: `Có lỗi xảy ra: ${err}`
           });
         })
-    }
-  },
-  mounted() {
-    var requestPayload = { 'return_ts': 0, 'page': 1, 'per_page': 10 }
-    var self = this
-
-    window.WebSocket = window.WebSocket || window.MozWebSocket
-    var clientSocket = new WebSocket('ws://localhost:40510');
-
-    clientSocket.onopen = function () {
-        clientSocket.send('hello server');
-    }
-
-    clientSocket.onmessage = function (e) {
-      var value = JSON.parse(e.data)
+    },
+    fetchNewData(args) {
+      var ts = 0
+      var requestPayload = { 'return_ts': ts, 'page': args, 'per_page': 5 }
+      this.$store.dispatch('getRequests', requestPayload)
+        .then(value => {
+          console.log(value)
+          this.requests = value
+        })
+    },
+    isBrowserSupportSocket() {
+      return window.WebSocket || window.MozWebSocket
+    },
+    receivedRequestValue(value) {
+      var self = this
       var id = value.ID
+      if (self.requests.results == null) {
+        return
+      }
       var updatedItem = self.requests.results.find(function(element) {
         return element.ID == id;
       })
@@ -107,10 +106,64 @@ export default {
         updatedItem.StatusName = value.StatusName
         updatedItem.Longtitude = value.Longtitude
         self.requests.results.splice(index, index + 1)
-        if (updatedItem.Status == 5 || updatedItem == 3) {
+        if (updatedItem.Status == 5 || updatedItem.Status == 3) {
           self.requests.results.push(updatedItem)
         }
       }
+    },
+    setupWebSocket() {
+      var self = this
+      window.WebSocket = window.WebSocket || window.MozWebSocket
+      var clientSocket = new WebSocket('ws://localhost:40510');
+
+      clientSocket.onopen = function () {
+          clientSocket.send('hello server');
+      }
+
+      clientSocket.onmessage = function (e) {
+        var value = JSON.parse(e.data)
+        self.receivedRequestValue(value)
+      }
+    },
+    setupLP() {
+      var self = this
+      var user_id = utils.getUserID()
+      var headers = {
+          'Content-Type': 'application/json',
+          'x-access-token': utils.getAccessToken()
+      }
+      var ts = 0
+      var fetchRefreshRequestAPI = function () {
+        axios.get(`http://127.0.0.1:3000/requests/refresh?ts=${ts}&staffID=${user_id}`,
+           { headers })
+          .then(result => {
+            if (result.status === 200) {
+              ts = result.data.return_ts
+              var items = result.data.results
+              console.log(items)
+              for (var item of items) {
+                self.receivedRequestValue(item)
+              }
+            }
+          }).catch(err => {
+            self.$message({ type: 'error', message: `Có lỗi xảy ra: ${err}` });
+          }).then(() => {
+            fetchRefreshRequestAPI()
+          })
+      }
+      fetchRefreshRequestAPI()
+    }
+  },
+  mounted() {
+    var ts = 0
+    var requestPayload = { 'return_ts': ts, 'page': 1, 'per_page': 5 }
+    var self = this
+    if (this.isBrowserSupportSocket()) {
+      console.log('browser support websocket')
+      this.setupWebSocket()
+    } else {
+      console.log("browser doesn't support websocket")
+      this.setupLP()
     }
 
     this.$store.dispatch('getRequests', requestPayload)

@@ -18,6 +18,7 @@ var configureHeader = function (accessToken) {
 
 export const getRequests = ({ commit }, requestPayload) => {
   headers = configureHeader(utils.getAccessToken())
+  console.log(headers['x-access-token'])
   var user_id = utils.getUserID()
   return new Promise((resolve, reject) => {
     axios.get(`http://127.0.0.1:3000/requests?ts=${requestPayload.return_ts}&page=${requestPayload.page}&per_page=${requestPayload.per_page}&staffID=${user_id}`,
@@ -29,6 +30,32 @@ export const getRequests = ({ commit }, requestPayload) => {
         reject(err)
       })
   })
+}
+
+export const getUpdatedRequests = ({ commit }, requestPayload) => {
+  headers = configureHeader(utils.getAccessToken())
+  var user_id = utils.getUserID()
+
+  var ts = 0
+  var fetchRefreshRequestAPI = function () {
+    return new Promise((resolve, reject) => {
+      axios.get(`http://127.0.0.1:3000/requests/refresh?ts=${ts}&staffID=${user_id}`,
+         { headers })
+        .then(result => {
+          if (result.status === 200) {
+            ts = result.data.return_ts
+            commit(types.GET_REQUEST, result.data)
+            resolve(result.data)
+          }
+        }).catch(err => {
+          reject(err)
+        }).then(() => {
+          fetchRefreshRequestAPI()
+        })
+    })
+  }
+  fetchRefreshRequestAPI()
+
 }
 
 export const setupWS = ({ commit }, requestPayload) => {
@@ -51,6 +78,19 @@ export const updateRequestGeocode = ({commit}, requestPayload) => {
   headers = configureHeader(utils.getAccessToken())
   return new Promise((resolve, reject) => {
     axios.put(`http://127.0.0.1:3000/requests/${requestPayload.ID}/geocode`, requestPayload, { headers })
+      .then(result => {
+        commit(types.UPDATE_REQUEST, result.data)
+        resolve(result.data)
+      }).catch(err => {
+        reject(err)
+      })
+  })
+}
+
+export const sendRequestForDrivers = ({commit}, requestPayload) => {
+  headers = configureHeader(utils.getAccessToken())
+  return new Promise((resolve, reject) => {
+    axios.post(`http://127.0.0.1:3003/requests`, requestPayload, { headers })
       .then(result => {
         commit(types.UPDATE_REQUEST, result.data)
         resolve(result.data)

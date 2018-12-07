@@ -1,9 +1,10 @@
 var db = require('../repositories/mysql-provider');
+var moment = require('moment')
 
 exports.createRequest = function (requestEntity) {
-  var sql = `insert into REQUESTS(GuestName, GuestTelephone, NameLocation, Note, Status)
+  var sql = `insert into REQUESTS(GuestName, GuestTelephone, NameLocation, Note, Status, created_at, FinishLocationName)
             values (N'${requestEntity.GuestName}', '${requestEntity.GuestTelephone}', N'${requestEntity.NameLocation}',
-            N'${requestEntity.Note}', ${requestEntity.Status})`
+            N'${requestEntity.Note}', ${requestEntity.Status}, ${moment().unix()}, N'${requestEntity.FinishLocationName}')`
   console.log(sql)
   return db.write(sql)
 }
@@ -22,10 +23,19 @@ exports.getRequestsPerPage = function (id, limit, offset) {
   return db.load(sql)
 }
 
+exports.getRequestsUpdate = function (id, ts) {
+  var waitingStatusCode = 3
+  var sql = `select req.*, sts.Name as StatusName from REQUESTS req join STATUS sts on req.Status = sts.ID
+            where (sts.ID = ${waitingStatusCode} or req.HandlingStaff = ${id} or req.HandlingStaff is NULL) and req.created_at >= ${ts}`
+  console.log(sql)
+  return db.load(sql)
+}
+
 exports.updateGeocodeLocation = function (requestEntity) {
   var processedStatusCode = 6
-  var sql = `update REQUESTS set Latitude = '${requestEntity.Latitude}', Longtitude = '${requestEntity.Longtitude}',
-              Status = ${processedStatusCode} where ID = ${requestEntity.ID}`
+  var sql = `update REQUESTS set Latitude = '${requestEntity.start.Lat}', Longtitude = '${requestEntity.start.Lng}',
+            FinishLatitude = '${requestEntity.end.Lat}', FinishLongtitude = '${requestEntity.end.Lng}',
+            Status = ${processedStatusCode} where ID = ${requestEntity.ID}`
   console.log(sql)
   return db.write(sql)
 }

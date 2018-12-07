@@ -15,7 +15,7 @@ router.post('/', (req, res, next) => {
     res.json(result)
 
     console.log('sent')
-    events.publishRequestChange(result)
+    //events.publishRequestChange(result)
     broadcastAll(result)
   }).catch(err => {
     res.statusCode = 500;
@@ -28,7 +28,6 @@ router.put('/:id/geocode', (req, res, next) => {
     res.statusCode = 201
     var result = req.body
     res.json(result)
-    events.publishRequestChange(result)
     broadcastAll(result)
   }).catch(err => {
     res.statusCode = 500;
@@ -45,12 +44,47 @@ router.put('/:id/status', (req, res, next) => {
     var result = rows[0]
     res.json(result)
 
-    events.publishRequestChange(result)
+    //events.publishRequestChange(result)
     broadcastAll(result)
   }).catch(err => {
     res.statusCode = 500;
     next(err);
   })
+})
+
+router.get('/refresh', (req, res, next) => {
+  var staffID = req.query.staffID
+
+  var ts = 0
+  if (req.query.ts) {
+    console.log(req.query.ts)
+    ts = +req.query.ts
+  }
+
+  var loop = 0
+  var execute = () => {
+    requestService.getRequestsUpdate(staffID, ts).then(rows => {
+      if (rows.length > 0) {
+        console.log('refresh sent')
+        res.json({
+          results: rows,
+          return_ts: moment().unix()
+        })
+      } else {
+        loop++
+        if (loop < 5) {
+          setTimeout(execute, 3500)
+        } else {
+          res.statusCode = 204
+          res.end('No updated data')
+        }
+      }
+
+    }).catch(error => {
+      next(error);
+    })
+  }
+  execute()
 })
 
 router.get('/', (req, res, next) => {

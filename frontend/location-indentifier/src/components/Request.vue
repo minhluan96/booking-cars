@@ -7,6 +7,14 @@
     <div v-for="r in listRequest" :key="r.ID">
       <RequestItem :item="r" @acceptedRequest="itemClickHandler" />
     </div>
+    <br>
+    <el-pagination
+      background
+      layout="prev, pager, next"
+      :page-size="perPage"
+      @current-change="handleCurrentChange"
+      :total="totalItems">
+    </el-pagination>
   </el-card>
 </template>
 
@@ -22,19 +30,25 @@ export default {
     return {
       requestsModel: {},
       listRequest: [],
-      selectedId: -1
+      selectedId: -1,
+      totalItems: 0,
+      perPage: 0
     }
   },
   methods: {
     itemClickHandler(args) {
       this.$emit('requestItemSelected', args);
+    },
+    handleCurrentChange(val) {
+      this.$emit('requestNextPage', val);
     }
   },
   watch: {
     requests (newValue, oldValue) {
       this.requestsModel = Object.assign({}, newValue)
       this.listRequest = this.requestsModel.results
-      console.log('list request', this.listRequest)
+      this.totalItems = this.requestsModel.totalPages * this.requestsModel.perPage
+      this.perPage = this.requestsModel.perPage
     }
   }
 }
