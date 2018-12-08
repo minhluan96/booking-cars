@@ -89,7 +89,8 @@
             lng: 106.681426
           },
           startIcon: "http://maps.google.com/mapfiles/ms/icons/red-dot.png",
-          title: "Nơi đón"
+          title: "Nơi đón",
+          address: ""
         },
         finish: {
           finishPosition: {
@@ -101,7 +102,8 @@
             lng: 106.686948
           },
           finishIcon: "http://maps.google.com/mapfiles/ms/icons/blue-dot.png",
-          title: "Điểm dừng"
+          title: "Điểm dừng",
+          address: ""
         },
         optionSelects: [
           {
@@ -160,18 +162,20 @@
       usePlace() {
         if (this.place) {
           var location = { lat: this.place.geometry.location.lat(), lng: this.place.geometry.location.lng() }
-          this.place = null;
           if (this.selectedOption == 1) {
             this.marker.$markerObject.setPosition(location)
             this.start.position.lat = location.lat
             this.start.position.lng = location.lng
+            this.start.address = this.place.formatted_address
             this.selectedOption = 2
           } else {
             this.finishedMarker.$markerObject.setPosition(location)
             this.finish.finishPosition.lat = location.lat
             this.finish.finishPosition.lng = location.lng
+            this.finish.address = this.place.formatted_address
             this.selectedOption = 1
           }
+          this.place = null;
           this.mapModel.panTo(location)
           this.calculateRoutes()
         }
@@ -210,15 +214,24 @@
           return
         }
 
-        var geocode = {
+        var packageInfo = {
           ID: this.request.ID,
           start: {
             Lat: this.start.position.lat,
-            Lng: this.start.position.lng
+            Lng: this.start.position.lng,
+            name: this.selectedRequest.NameLocation,
+            address: this.start.address
           },
           end: {
             Lat: this.finish.finishPosition.lat,
-            Lng: this.finish.finishPosition.lng
+            Lng: this.finish.finishPosition.lng,
+            name: this.selectedRequest.FinishLocationName,
+            address: this.finish.address
+          },
+          Guest: {
+            name: this.selectedRequest.GuestName,
+            phone: this.selectedRequest.GuestTelephone,
+            note: this.selectedRequest.Note
           }
         }
         this.$confirm(`Bạn có chắc chắn với các thông tin đã nhập?`, 'Lưu ý kiểm tra lại thông tin', {
@@ -227,7 +240,7 @@
           type: 'warning'
         }).then(() => {
           this.resetAllValues()
-          this.$emit('locationUpdated', geocode)
+          this.$emit('locationUpdated', packageInfo)
         }).catch(() => {
           this.$message({
             type: 'info',
@@ -273,6 +286,9 @@
         this.start.position.lng = 0
         this.finish.finishPosition.lat = 0
         this.finish.finishPosition.lng = 0
+        this.start.address = ""
+        this.finish.address = ""
+        this.selectedOption = 1
       }
     },
     mounted() {

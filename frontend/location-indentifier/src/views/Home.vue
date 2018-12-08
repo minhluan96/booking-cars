@@ -63,7 +63,8 @@ export default {
       this.$store.dispatch('updateRequestGeocode', args)
         .then(value => {
           self.request = {}
-          return this.$store.dispatch('sendRequestForDrivers', value)
+          console.log('send for driver', args)
+          return this.$store.dispatch('sendRequestForDrivers', args)
         }).then(value => {
           self.$message({
             type: 'success',
