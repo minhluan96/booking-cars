@@ -3,7 +3,8 @@
     <NavBar />
     <div class="row">
       <div class="col-md-3">
-        <Request :requests="requests" @requestItemSelected="requestItemHandler" @requestNextPage="fetchNewData"/>
+        <Request :requests="requests" @refreshRequestList="refreshListHandler"
+          @requestItemSelected="requestItemHandler" @requestNextPage="fetchNewData"/>
       </div>
       <div class="col-md-9">
         <Maps :request="request" @locationUpdated="locationUpdatedHandler" />
@@ -30,7 +31,8 @@ export default {
   data () {
     return {
       requests: [],
-      request: {}
+      request: {},
+      currentPage: 1
     }
   },
   methods: {
@@ -63,8 +65,7 @@ export default {
       this.$store.dispatch('updateRequestGeocode', args)
         .then(value => {
           self.request = {}
-          console.log('send for driver', args)
-          return this.$store.dispatch('sendRequestForDrivers', args)
+          return this.$store.dispatch('sendRequestForDrivers', value)
         }).then(value => {
           self.$message({
             type: 'success',
@@ -79,11 +80,19 @@ export default {
     },
     fetchNewData(args) {
       var ts = 0
+      var self = this
       var requestPayload = { 'return_ts': ts, 'page': args, 'per_page': 5 }
+      this.currentPage = args
       this.$store.dispatch('getRequests', requestPayload)
         .then(value => {
           console.log(value)
           this.requests = value
+        }).catch(err => {
+          if (err.response.status === 403) {
+            self.$message({ type: 'error', message: "Đã hết phiên sử dụng. Vui lòng đăng nhập lại"})
+            localStorage.removeItem('user')
+            self.$router.push('/login')
+          }
         })
     },
     isBrowserSupportSocket() {
@@ -98,19 +107,13 @@ export default {
       var updatedItem = self.requests.results.find(function(element) {
         return element.ID == id;
       })
-      if (updatedItem == null) {
-        self.requests.results.push(value)
-      } else {
-        var index = self.requests.results.findIndex(x => x.ID == updatedItem.ID);
-        updatedItem.Latitude = value.Latitude
-        updatedItem.Status = value.Status
-        updatedItem.StatusName = value.StatusName
-        updatedItem.Longtitude = value.Longtitude
-        self.requests.results.splice(index, index + 1)
-        if (updatedItem.Status == 5 || updatedItem.Status == 3) {
-          self.requests.results.push(updatedItem)
-        }
-      }
+
+      var requestPayload = { 'return_ts': 0, 'page': this.currentPage, 'per_page': 5 }
+      this.$store.dispatch('getRequests', requestPayload)
+        .then(value => {
+          console.log('get all request', value)
+          self.requests = value
+        })
     },
     setupWebSocket() {
       var self = this
@@ -125,6 +128,19 @@ export default {
         var value = JSON.parse(e.data)
         self.receivedRequestValue(value)
       }
+    },
+    refreshListHandler(args) {
+      if (!args) return
+      console.log('refresh list')
+      var requestPayload = { 'return_ts': 0, 'page': this.currentPage, 'per_page': 5 }
+      this.$store.dispatch('getRequests', requestPayload)
+        .then(value => {
+          this.$message({
+            type: 'success',
+            message: `Đã cập nhật danh sách yêu cầu`
+          });
+          this.requests = value
+        })
     },
     setupLP() {
       var self = this
@@ -170,6 +186,12 @@ export default {
     this.$store.dispatch('getRequests', requestPayload)
       .then(value => {
         this.requests = value
+      }).catch(err => {
+        if (err.response.status === 403) {
+          self.$message({ type: 'error', message: "Đã hết phiên sử dụng. Vui lòng đăng nhập lại"})
+          localStorage.removeItem('user')
+          self.$router.push('/login')
+        }
       })
   }
 }

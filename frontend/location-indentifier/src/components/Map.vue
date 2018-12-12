@@ -17,7 +17,7 @@
       <div class="row">
         <div class="col-md-10" style="text-align: left">
 
-          <GmapAutocomplete class="autocomplete-input" @place_changed="setPlace">
+          <GmapAutocomplete ref="inputSearch" :readonly="disableButton()" class="autocomplete-input" @place_changed="setPlace">
           </GmapAutocomplete>
 
           <el-select v-model="selectedOption" filterable placeholder="Select">
@@ -29,7 +29,7 @@
             </el-option>
           </el-select>
 
-          <el-button slot="append" icon="el-icon-search" @click="usePlace()"></el-button>
+          <el-button slot="append" icon="el-icon-search" :disabled="disableButton()" @click="usePlace()"></el-button>
         </div>
       </div>
       <div class="row">
@@ -89,8 +89,7 @@
             lng: 106.681426
           },
           startIcon: "http://maps.google.com/mapfiles/ms/icons/red-dot.png",
-          title: "Nơi đón",
-          address: ""
+          title: "Nơi đón"
         },
         finish: {
           finishPosition: {
@@ -102,8 +101,7 @@
             lng: 106.686948
           },
           finishIcon: "http://maps.google.com/mapfiles/ms/icons/blue-dot.png",
-          title: "Điểm dừng",
-          address: ""
+          title: "Điểm dừng"
         },
         optionSelects: [
           {
@@ -162,22 +160,23 @@
       usePlace() {
         if (this.place) {
           var location = { lat: this.place.geometry.location.lat(), lng: this.place.geometry.location.lng() }
+          this.place = null;
           if (this.selectedOption == 1) {
             this.marker.$markerObject.setPosition(location)
             this.start.position.lat = location.lat
             this.start.position.lng = location.lng
-            this.start.address = this.place.formatted_address
             this.selectedOption = 2
           } else {
             this.finishedMarker.$markerObject.setPosition(location)
             this.finish.finishPosition.lat = location.lat
             this.finish.finishPosition.lng = location.lng
-            this.finish.address = this.place.formatted_address
             this.selectedOption = 1
           }
-          this.place = null;
+          this.$refs.inputSearch.$el.value = ""
           this.mapModel.panTo(location)
           this.calculateRoutes()
+        } else {
+          this.$message({type: 'error', message: 'Không tìm được địa điểm'})
         }
       },
       geocodeAddress(geocoder, resultsMap) {
@@ -214,24 +213,15 @@
           return
         }
 
-        var packageInfo = {
+        var geocode = {
           ID: this.request.ID,
           start: {
             Lat: this.start.position.lat,
-            Lng: this.start.position.lng,
-            name: this.selectedRequest.NameLocation,
-            address: this.start.address
+            Lng: this.start.position.lng
           },
           end: {
             Lat: this.finish.finishPosition.lat,
-            Lng: this.finish.finishPosition.lng,
-            name: this.selectedRequest.FinishLocationName,
-            address: this.finish.address
-          },
-          Guest: {
-            name: this.selectedRequest.GuestName,
-            phone: this.selectedRequest.GuestTelephone,
-            note: this.selectedRequest.Note
+            Lng: this.finish.finishPosition.lng
           }
         }
         this.$confirm(`Bạn có chắc chắn với các thông tin đã nhập?`, 'Lưu ý kiểm tra lại thông tin', {
@@ -240,7 +230,7 @@
           type: 'warning'
         }).then(() => {
           this.resetAllValues()
-          this.$emit('locationUpdated', packageInfo)
+          this.$emit('locationUpdated', geocode)
         }).catch(() => {
           this.$message({
             type: 'info',
@@ -252,9 +242,11 @@
         if (this.selectedRequest.GuestName == null && this.selectedRequest.NameLocation == null) {
           return 'Không có thông tin để hiển thị'
         }
-        return `Tên khách hàng: ${this.selectedRequest.GuestName}
+        return `Mã yêu cầu: ${this.selectedRequest.ID}
+                Tên khách hàng: ${this.selectedRequest.GuestName}
                 Địa chỉ đón: ${this.selectedRequest.NameLocation}
-                Địa chỉ dừng: ${this.selectedRequest.FinishLocationName}`
+                Địa chỉ dừng: ${this.selectedRequest.FinishLocationName}
+                Ghi chú: ${this.selectedRequest.Note}`
       },
       disableButton() {
         return this.selectedRequest.ID == null
@@ -286,8 +278,7 @@
         this.start.position.lng = 0
         this.finish.finishPosition.lat = 0
         this.finish.finishPosition.lng = 0
-        this.start.address = ""
-        this.finish.address = ""
+        this.$refs.inputSearch.$el.value = ""
         this.selectedOption = 1
       }
     },

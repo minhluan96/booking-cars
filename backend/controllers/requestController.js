@@ -27,6 +27,7 @@ router.put('/:id/geocode', (req, res, next) => {
   requestService.updateGeocodeLocation(req.body).then(value => {
     res.statusCode = 201
     var result = req.body
+    console.log(result)
     res.json(result)
     broadcastAll(result)
   }).catch(err => {

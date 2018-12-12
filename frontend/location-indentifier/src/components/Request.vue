@@ -1,8 +1,9 @@
 <template>
   <el-card class="box-card" style="overflow-y: scroll; overflow-x: hidden">
     <div slot="header" class="clearfix">
-      <span><strong>DANH SÁCH CÁC REQUEST</strong></span>
-      <el-button style="float: right; padding: 3px 0" type="text" icon="el-icon-refresh">Làm mới danh sách</el-button>
+      <span><strong>DANH SÁCH CÁC YÊU CẦU</strong></span>
+      <el-button style="float: right; padding: 3px 0" @click="refreshList()"
+          type="text" icon="el-icon-refresh">Làm mới danh sách</el-button>
     </div>
     <div v-for="r in listRequest" :key="r.ID">
       <RequestItem :item="r" @acceptedRequest="itemClickHandler" />
@@ -41,6 +42,9 @@ export default {
     },
     handleCurrentChange(val) {
       this.$emit('requestNextPage', val);
+    },
+    refreshList() {
+      this.$emit('refreshRequestList', true)
     }
   },
   watch: {

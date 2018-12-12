@@ -11,22 +11,26 @@ exports.createRequest = function (requestEntity) {
 
 exports.getTotalRequest = function (id) {
   var waitingStatusCode = 3
-  var sql = `select count(*) as total from REQUESTS where Status = ${waitingStatusCode} or HandlingStaff = ${id} or HandlingStaff is NULL`
+  var processingStatusCode = 5
+  var sql = `select count(*) as total from REQUESTS where (Status = ${waitingStatusCode} or Status = ${processingStatusCode}) and (HandlingStaff = ${id} or HandlingStaff is NULL)`
   return db.load(sql)
 }
 
 exports.getRequestsPerPage = function (id, limit, offset) {
   var waitingStatusCode = 3
+  var processingStatusCode = 5
   var sql = `select req.*, sts.Name as StatusName from REQUESTS req join STATUS sts on req.Status = sts.ID
-            where sts.ID = ${waitingStatusCode} or req.HandlingStaff = ${id} or req.HandlingStaff is NULL limit ${limit} offset ${offset}`
+            where (sts.ID = ${waitingStatusCode} or sts.ID = ${processingStatusCode}) and (req.HandlingStaff = ${id} or req.HandlingStaff is NULL)
+            order by sts.ID desc limit ${limit} offset ${offset}`
   console.log(sql)
   return db.load(sql)
 }
 
 exports.getRequestsUpdate = function (id, ts) {
   var waitingStatusCode = 3
+  var processingStatusCode = 5
   var sql = `select req.*, sts.Name as StatusName from REQUESTS req join STATUS sts on req.Status = sts.ID
-            where (sts.ID = ${waitingStatusCode} or req.HandlingStaff = ${id} or req.HandlingStaff is NULL) and req.created_at >= ${ts}`
+            where (sts.ID = ${waitingStatusCode} or sts.ID = ${processingStatusCode}) and (req.HandlingStaff = ${id} or req.HandlingStaff is NULL) and req.created_at >= ${ts}`
   console.log(sql)
   return db.load(sql)
 }

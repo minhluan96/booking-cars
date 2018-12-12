@@ -18,7 +18,6 @@ var configureHeader = function (accessToken) {
 
 export const getRequests = ({ commit }, requestPayload) => {
   headers = configureHeader(utils.getAccessToken())
-  console.log(headers['x-access-token'])
   var user_id = utils.getUserID()
   return new Promise((resolve, reject) => {
     axios.get(`http://127.0.0.1:3000/requests?ts=${requestPayload.return_ts}&page=${requestPayload.page}&per_page=${requestPayload.per_page}&staffID=${user_id}`,
