@@ -100,7 +100,7 @@ CREATE TABLE `STATUS` (
 
 LOCK TABLES `STATUS` WRITE;
 /*!40000 ALTER TABLE `STATUS` DISABLE KEYS */;
-INSERT INTO `STATUS` VALUES (1,'Đang hoạt động'),(2,'Ngừng hoạt động'),(3,'Đang chờ'),(4,'Đã nhận'),(5,'Đang xử lý yêu cầu'),(6,'Đã xử lý yêu cầu'),(7,'Đang bận');
+INSERT INTO `STATUS` VALUES (1,'Đang hoạt động'),(2,'Ngừng hoạt động'),(3,'Đang chờ'),(4,'Đã hoàn thành'),(5,'Đang xử lý yêu cầu'),(6,'Đã xử lý yêu cầu'),(7,'Đang bận'),(8,'Đang nghỉ ngơi'),(9,"Không có xe");
 /*!40000 ALTER TABLE `STATUS` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -152,6 +152,8 @@ CREATE TABLE `DRIVERS` (
   `RefreshToken` varchar(2000) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
   `ID_Roles` int(11) NOT NULL DEFAULT '4',
   `Status` int(11) NOT NULL DEFAULT '2',
+  `created_at` int(11) NOT NULL,
+  `updated_at` int(11) NOT NULL,
   PRIMARY KEY (`ID`),
   KEY `FK_DVS_RLS_idx` (`ID_Roles`),
   KEY `FK_DVS_STS_idx` (`Status`),
@@ -166,7 +168,7 @@ CREATE TABLE `DRIVERS` (
 
 LOCK TABLES `DRIVERS` WRITE;
 /*!40000 ALTER TABLE `DRIVERS` DISABLE KEYS */;
-INSERT INTO `DRIVERS` VALUES (1,'chhung','e10adc3949ba59abbe56e057f20f883e','','','',4,2);
+INSERT INTO `DRIVERS` VALUES (1,'chhung','e10adc3949ba59abbe56e057f20f883e',NULL,NULL,NULL,4,2,1543680344,1543680344);
 /*!40000 ALTER TABLE `DRIVERS` ENABLE KEYS */;
 UNLOCK TABLES;
 /*!40103 SET TIME_ZONE=@OLD_TIME_ZONE */;
