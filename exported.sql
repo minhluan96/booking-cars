@@ -100,7 +100,7 @@ CREATE TABLE `STATUS` (
 
 LOCK TABLES `STATUS` WRITE;
 /*!40000 ALTER TABLE `STATUS` DISABLE KEYS */;
-INSERT INTO `STATUS` VALUES (1,'Đang hoạt động'),(2,'Ngừng hoạt động'),(3,'Đang chờ'),(4,'Đã hoàn thành'),(5,'Đang xử lý yêu cầu'),(6,'Đã xử lý yêu cầu'),(7,'Đang bận'),(8,'Đang nghỉ ngơi'),(9,"Không có xe");
+INSERT INTO `STATUS` VALUES (1,'Đang hoạt động'),(2,'Ngừng hoạt động'),(3,'Đang chờ'),(4,'Đã hoàn thành'),(5,'Đang xử lý yêu cầu'),(6,'Đã xử lý yêu cầu'),(7,'Đang bận'),(8,'Đang nghỉ ngơi'),(9,"Không có xe"),(10, "Đã nhận");
 /*!40000 ALTER TABLE `STATUS` ENABLE KEYS */;
 UNLOCK TABLES;
 
