@@ -49,8 +49,12 @@ export default {
       this.$store.dispatch('updateRequestStatus', requestPayload)
         .then(value => {
           this.request = value
+          return this.$store.dispatch('sendRequestForManagers', requestPayload)
           this.$message({ type: 'success', message: `Tiếp nhận yêu cầu thành công` });
-        }).catch(err => {
+        }).then(value => {
+          //send request for manager sucessfully
+        })
+        .catch(err => {
           this.$message({ type: 'error', message: `Có lỗi xảy ra: ${err}` });
         })
     },
@@ -71,6 +75,9 @@ export default {
             type: 'success',
             message: `Xử lý thành công`
           });
+          return this.$store.dispatch('sendRequestForManagers', args)
+        }).then(value => {
+          //send request for manager sucessfully
         }).catch(err => {
           self.$message({
             type: 'error',

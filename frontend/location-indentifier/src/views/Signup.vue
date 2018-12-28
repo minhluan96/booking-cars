@@ -13,19 +13,26 @@
             <i slot="prefix" class="el-input__icon glyphicon glyphicon-user"></i>
           </el-input>
 
-          <el-input style="margin-top: 20px"
+          <el-input style="margin-top: 10px"
             placeholder="Mật khẩu"
             type="password"
             v-model="inputPass">
             <i slot="prefix" class="el-input__icon glyphicon glyphicon-lock"></i>
           </el-input>
 
-          <el-input style="margin-top: 20px"
+          <el-input style="margin-top: 10px"
             placeholder="Nhập lại mật khẩu"
             type="password"
             v-model="inputCheckPass">
             <i slot="prefix" class="el-input__icon glyphicon glyphicon-repeat"></i>
           </el-input>
+
+          <el-alert style="margin-top: 12px"
+            :title="errorMessage"
+            v-if="errorMessage != ''"
+            :closable="false"
+            type="error">
+          </el-alert>
 
           <div style="margin-top: 20px">
             <el-button @click="cancelSignup">Hủy bỏ</el-button>
@@ -48,7 +55,8 @@ export default {
     return {
       inputName: '',
       inputPass: '',
-      inputCheckPass: ''
+      inputCheckPass: '',
+      errorMessage: ''
     }
   },
   methods: {
@@ -56,6 +64,7 @@ export default {
       this.$router.push('/login')
     },
     signup() {
+      if (!this.validateInput()) return
       var roleLocationIdenfifier = 2
       var userPayload = {
         Username: this.inputName,
@@ -66,8 +75,34 @@ export default {
         this.$message({ type: 'success', message: `Đăng ký thành công` });
         this.$router.push('/login')
       }).catch(err => {
+        if (err.response.status == 403) {
+          this.errorMessage = err.response.data.error
+          return
+        }
+        this.errorMessage = 'Đăng ký không thành công'
         this.$message({ type: 'error', message: `Đăng ký thất bại. Có lỗi xảy ra: ${err}` });
       })
+    },
+    validateInput() {
+      if (this.inputName.trim() === '' || this.inputPass.trim() === '' || this.inputCheckPass.trim() === '') {
+        this.errorMessage = 'Vui lòng nhập đầy đủ thông tin'
+        return false
+      }
+      var format = /[ !@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/;
+      if (format.test(this.inputName)) {
+        this.errorMessage = 'Tên tài khoản không được chứa các kí tự đặc biệt'
+        return false
+      }
+      if (this.inputPass.trim().length < 6) {
+        this.errorMessage = 'Mật khẩu phải có ít nhất 6 kí tự'
+        return false
+      }
+      if (this.inputPass.trim() != this.inputCheckPass.trim()) {
+        this.errorMessage = "Nhập lại mật khẩu không chính xác"
+        return false
+      }
+      this.errorMessage = ''
+      return true
     }
 
   }
@@ -78,7 +113,7 @@ export default {
 <style lang="css">
   .signup-card {
     margin: 0 auto;
-    height: 400px;
+    height: 420px;
   }
 
   .card-contain {

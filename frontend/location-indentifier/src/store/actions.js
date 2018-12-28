@@ -2,7 +2,6 @@ import * as types from './mutation-types'
 import axios from 'axios'
 import utils from './utils'
 
-
 var headers = {
     'Content-Type': 'application/json',
     'x-access-token': ''
@@ -18,6 +17,7 @@ var configureHeader = function (accessToken) {
 
 export const getRequests = ({ commit }, requestPayload) => {
   headers = configureHeader(utils.getAccessToken())
+  console.log(utils.getAccessToken())
   var user_id = utils.getUserID()
   return new Promise((resolve, reject) => {
     axios.get(`http://127.0.0.1:3000/requests?ts=${requestPayload.return_ts}&page=${requestPayload.page}&per_page=${requestPayload.per_page}&staffID=${user_id}`,
@@ -158,6 +158,19 @@ export const signupRequest = ({commit}, userPayload) => {
     axios.post(`http://127.0.0.1:3000/signup`, userPayload)
       .then(result => {
         commit(types.USER, result.data)
+        resolve(result.data)
+      }).catch(err => {
+        reject(err)
+      })
+  })
+}
+
+export const sendRequestForManagers = ({commit}, requestPayload) => {
+  headers = configureHeader(utils.getAccessToken())
+  return new Promise((resolve, reject) => {
+    axios.post(`http://127.0.0.1:3010/requests`, requestPayload, { headers })
+      .then(result => {
+        commit(types.UPDATE_REQUEST, result.data)
         resolve(result.data)
       }).catch(err => {
         reject(err)

@@ -13,12 +13,20 @@
             <i slot="prefix" class="el-input__icon glyphicon glyphicon-user"></i>
           </el-input>
 
-          <el-input style="margin-top: 20px"
+          <el-input style="margin-top: 10px"
             placeholder="Mật khẩu"
             type="password"
             v-model="inputPass">
             <i slot="prefix" class="el-input__icon glyphicon glyphicon-lock"></i>
           </el-input>
+
+          <el-alert style="margin-top: 12px"
+            :title="errorMessage"
+            v-if="errorMessage != ''"
+            :closable="false"
+            type="error">
+          </el-alert>
+
           <div style="margin-top: 20px">
             <el-button @click="singupButtonClick">Đăng ký</el-button>
             <el-button type="primary" @click="onButtonLoginClick">Đăng nhập</el-button>
@@ -39,21 +47,36 @@ export default {
   data() {
     return {
       inputName: '',
-      inputPass: ''
+      inputPass: '',
+      errorMessage: ''
     }
   },
   methods: {
     onButtonLoginClick() {
+      if (!this.validateInput()) return
       var userPayload = { Username: this.inputName, Password: this.inputPass }
       this.$store.dispatch('loginRequest', userPayload).then(value => {
+        if (!value.auth) {
+          this.errorMessage = 'Tên tài khoản hoặc mật khẩu không chính xác'
+          return
+        }
         localStorage.setItem('user', JSON.stringify(value))
         this.$router.push( {name: 'home'} )
       }).catch(err => {
+        this.errorMessage = 'Đăng nhập thất bại'
         this.$message({ type: 'error', message: `Đăng nhập thất bại. Có lỗi xảy ra: ${err}` });
       })
     },
     singupButtonClick() {
       this.$router.push('/signup')
+    },
+    validateInput() {
+      if (this.inputName.trim() === '' || this.inputPass.trim() === '') {
+        this.errorMessage = "Vui lòng nhập đầy đủ thông tin"
+        return false
+      }
+      this.errorMessage = ''
+      return true
     }
   },
   mounted() {

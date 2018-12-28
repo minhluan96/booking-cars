@@ -4,6 +4,7 @@
       <div>
         <div class="row">
           <div class="col-md-7" style="text-align: left">
+            <span>Mã yêu cầu: {{ item.ID }}</span><br/>
             <span>Địa chỉ: {{ item.NameLocation }}</span><br/>
             <span>Số điện thoại: {{ item.GuestTelephone }}</span>
           </div>

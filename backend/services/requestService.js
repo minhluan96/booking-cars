@@ -39,14 +39,15 @@ exports.updateGeocodeLocation = function (requestEntity) {
   var processedStatusCode = 6
   var sql = `update REQUESTS set Latitude = '${requestEntity.start.Lat}', Longtitude = '${requestEntity.start.Lng}',
             FinishLatitude = '${requestEntity.end.Lat}', FinishLongtitude = '${requestEntity.end.Lng}',
-            Status = ${processedStatusCode} where ID = ${requestEntity.ID}`
+            Status = ${processedStatusCode}, created_at = ${moment().unix()} where ID = ${requestEntity.ID}`
   console.log(sql)
   return db.write(sql)
 }
 
 exports.updateStatus = function (requestEntity) {
   var statusCode = requestEntity.Status
-  var sql = `update REQUESTS set Status = ${statusCode}, HandlingStaff = ${requestEntity.StaffID} where ID = ${requestEntity.ID}`
+  var sql = `update REQUESTS set Status = ${statusCode},
+            HandlingStaff = ${requestEntity.StaffID}, created_at = ${moment().unix()} where ID = ${requestEntity.ID}`
   return db.write(sql)
 }
 
