@@ -6,20 +6,33 @@ var moment = require('moment')
 
 var router = express.Router();
 
-router.post('/', (req, res, next) => {
-  requestService.createRequest(req.body).then(value => {
-    res.statusCode = 201
-    var id = value.insertId
-    req.body.ID = id
-    var result = req.body
-    res.json(result)
+// router.post('/', (req, res, next) => {
+//   requestService.createRequest(req.body).then(value => {
+//     res.statusCode = 201
+//     var id = value.insertId
+//     req.body.ID = id
+//     var result = req.body
+//     res.json(result)
+//
+//     console.log('sent')
+//     //events.publishRequestChange(result)
+//     broadcastAll(result)
+//   }).catch(err => {
+//     res.statusCode = 500;
+//     next(err);
+//   })
+// })
 
-    console.log('sent')
-    //events.publishRequestChange(result)
-    broadcastAll(result)
-  }).catch(err => {
-    res.statusCode = 500;
-    next(err);
+router.post('/', (req, res, next) => {
+  var id = req.body.ID
+  requestService.getRequestByID(id).then(value => {
+    res.statusCode = 200
+    if (value.length > 0) {
+      res.json(value[0])
+      broadcastAll(value)
+    } else {
+      res.json({})
+    }
   })
 })
 
