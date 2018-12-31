@@ -40,18 +40,20 @@ export default {
       this.$emit('acceptedRequest', this.item);
     },
     titleButton() {
-      if (this.item.Status != 3) {
-        return 'Tiếp tục xử lý'
-      } else {
+      if (this.item.Status == 3) {
         return 'Nhận yêu cầu'
+      } else if (this.item.Status == 5) {
+        return 'Tiếp tục xử lý'
       }
+      return 'Không có xe'
     },
     typeButton() {
-      if (this.item.Status != 3) {
-        return 'warning'
-      } else {
+      if (this.item.Status == 3) {
         return 'success'
+      } else if (this.item.Status == 5) {
+        return 'warning'
       }
+      return 'danger'
     }
   },
   watch: {
