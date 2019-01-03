@@ -39,7 +39,7 @@
       this.$store.dispatch('getUserInfo', payload).then(value => {
         this.username = value.Username
       }).catch(err => {
-        this.$message({ type: 'error', message: `Có lỗi xảy ra: ${err}` });
+        this.$message({ type: 'error', message: `Phiên đăng nhập hết hạn. Vui lòng đăng nhập lại` });
       })
     }
   }
