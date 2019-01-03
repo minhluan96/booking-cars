@@ -10,7 +10,7 @@ var userController = require('./controllers/userController');
 var signupController = require('./controllers/signupController');
 var requestController = require('./controllers/requestController');
 var loginController = require('./controllers/loginController');
-var loginController = require('./controllers/refreshController');
+var refreshController = require('./controllers/refreshController');
 
 app.use(morgan('dev'));
 app.use(bodyParser('json'));
