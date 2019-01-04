@@ -7,7 +7,13 @@
       ref="gmap"
       :options="options"
       map-type-id="terrain">
-      <gmap-marker ref="markers" :position="start.center" :title="start.title" :icon="start.startIcon"  :draggable="true" @drag="updateCoordinates">
+
+      <gmap-info-window :options="infoOptions" :position="infoWindowPos" :opened="infoWinOpen" @closeclick="infoWinOpen=false">
+        {{infoContent}}
+      </gmap-info-window>
+
+
+      <gmap-marker ref="markers" :position="start.center" :title="start.title" :icon="start.startIcon" @click="toggleStartWindow()" :draggable="true" @drag="updateCoordinates">
       </gmap-marker>
 
       <gmap-marker ref="finishMarkers" :position="finish.finishCenter" :title="finish.title" :icon="finish.finishIcon" :draggable="true" @drag="updateFinishPositionCoordinates">
@@ -75,6 +81,15 @@
     data () {
       return {
         state4: '',
+        infoOptions: {
+          pixelOffset: {
+            width: 0,
+            height: -35
+          }
+        },
+        infoContent: '',
+        infoWindowPos: null,
+        infoWinOpen: false,
         timeout: null,
         numberOfNearestDriver: 5,
         driverIcon: {
@@ -177,10 +192,13 @@
           var location = { lat: this.place.geometry.location.lat(), lng: this.place.geometry.location.lng() }
           this.place = null;
           if (this.selectedOption == 1) {
+            console.log('before', this.marker)
+            var listener = this.marker.$listeners
             this.marker.$markerObject.setPosition(location)
             this.start.position.lat = location.lat
             this.start.position.lng = location.lng
             this.selectedOption = 2
+            console.log('after', this.marker)
             this.displayNearestDrivers()
           } else {
             this.finishedMarker.$markerObject.setPosition(location)
@@ -325,6 +343,28 @@
           }).catch(err => {
             this.$message({ type: 'error', message: `Có lỗi xảy ra: ${err}` });
           })
+      },
+      toggleStartWindow() {
+        var latlng = { lat: this.start.position.lat, lng: this.start.position.lng }
+        this.infoWindowPos = this.marker.position
+        this.infoWinOpen = true
+        console.log('toggle open')
+        var self = this
+
+        this.geocoder.geocode({'location': latlng }, function(results, status) {
+          if (status === 'OK') {
+            console.log('received content', results[0])
+            if (results[0]) {
+              this.infoContent = results[0].formatted_address
+            } else {
+              console.log('khong co thong tin')
+              this.infoContent = 'Không có thông tin để hiển thị'
+            }
+          } else {
+            console.log('khong co thong tin')
+            this.infoContent = 'Không có thông tin để hiển thị'
+          }
+        })
       }
     },
     mounted() {
