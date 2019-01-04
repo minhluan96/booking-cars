@@ -12,6 +12,13 @@
 
       <gmap-marker ref="finishMarkers" :position="finish.finishCenter" :title="finish.title" :icon="finish.finishIcon" :draggable="true" @drag="updateFinishPositionCoordinates">
       </gmap-marker>
+
+      <GmapMarker v-for="(marker, index) in driverMarkers"
+        :icon="driverIcon"
+        :key="index"
+        :position="marker.latLng"
+        />
+
     </gmap-map>
     <div class="container">
       <div class="row">
@@ -69,6 +76,14 @@
       return {
         state4: '',
         timeout: null,
+        numberOfNearestDriver: 5,
+        driverIcon: {
+          url: "http://images.clipartpanda.com/car-top-view-clipart-red-racing-car-top-view-fe3a.png",
+          size: {width: 69, height: 69, f: 'px', b: 'px'},
+          scaledSize: {width: 46, height: 46, f: 'px', b: 'px'}
+        },
+        driverMarkers: [],
+        drivers: [],
         marker: null,
         finishedMarker: null,
         inputData: '',
@@ -166,6 +181,7 @@
             this.start.position.lat = location.lat
             this.start.position.lng = location.lng
             this.selectedOption = 2
+            this.displayNearestDrivers()
           } else {
             this.finishedMarker.$markerObject.setPosition(location)
             this.finish.finishPosition.lat = location.lat
@@ -280,6 +296,35 @@
         this.finish.finishPosition.lng = 0
         this.$refs.inputSearch.$el.value = ""
         this.selectedOption = 1
+        this.drivers = []
+        this.driverMarkers = []
+      },
+      displayNearestDrivers() {
+        this.drivers = []
+        this.driverMarkers = []
+        var driverPayload = { quantity: this.numberOfNearestDriver,
+          latitude: this.start.position.lat, longtitude: this.start.position.lng }
+
+        console.log('payload', driverPayload)
+
+        this.$store.dispatch('getNearestDriver', driverPayload)
+          .then(value => {
+            this.drivers = value
+            console.log('drivers', this.drivers)
+
+            for (var d of this.drivers) {
+              var pos = {
+                lat: parseFloat(d.Latitude),
+                lng: parseFloat(d.Longtitude)
+              }
+              this.driverMarkers.push({ latLng: pos })
+            }
+
+            console.log(this.driverMarkers)
+
+          }).catch(err => {
+            this.$message({ type: 'error', message: `Có lỗi xảy ra: ${err}` });
+          })
       }
     },
     mounted() {

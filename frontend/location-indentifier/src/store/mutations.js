@@ -12,5 +12,8 @@ export const mutations = {
   },
   [types.USER] (state, userPayload) {
     state.user = userPayload
+  },
+  [types.GET_USERS] (state, userPayload) {
+    state.user = userPayload
   }
 }

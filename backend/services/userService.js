@@ -23,3 +23,8 @@ exports.checkUserExists = function (userEntity) {
   var sql = `select * from USERS where Username = '${userEntity.Username}' and ID_Roles = 2`
   return db.load(sql)
 }
+
+exports.getAllDrivers = function () {
+  var sql = `select * from DRIVERS where Status = 1`
+  return db.load(sql)
+}

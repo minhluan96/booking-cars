@@ -17,13 +17,27 @@ var configureHeader = function (accessToken) {
 
 export const getRequests = ({ commit }, requestPayload) => {
   headers = configureHeader(utils.getAccessToken())
-  console.log(utils.getAccessToken())
   var user_id = utils.getUserID()
   return new Promise((resolve, reject) => {
     axios.get(`http://127.0.0.1:3000/requests?ts=${requestPayload.return_ts}&page=${requestPayload.page}&per_page=${requestPayload.per_page}&staffID=${user_id}`,
        { headers })
       .then(result => {
         commit(types.GET_REQUEST, result.data)
+        resolve(result.data)
+      }).catch(err => {
+        reject(err)
+      })
+  })
+}
+
+
+export const getNearestDriver = ({commit}, userPayload) => {
+  headers = configureHeader(utils.getAccessToken())
+  return new Promise((resolve, reject) => {
+    axios.get(`http://127.0.0.1:3000/users/drivers?quantity=${userPayload.quantity}&latitude=${userPayload.latitude}&longtitude=${userPayload.longtitude}`,
+      { headers })
+      .then(result => {
+        commit(types.GET_USERS, result.data)
         resolve(result.data)
       }).catch(err => {
         reject(err)
