@@ -1,4 +1,4 @@
-# Booking car system
+# Booking cars system
 
 A booking car system will cover all these parts:
 
